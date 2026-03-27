@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema De Reserva e Rastreamento de Hardware - Registro</title>
+    <title>Sistema De Reserva e Rastreamento de Equipamento - Registro</title>
 
     <link rel="stylesheet" href="/sistema/jquery/jquery.modal.min.css">
     <link rel="stylesheet" href="/sistema/templates/webstyle.css">
@@ -29,12 +29,12 @@
 
     <div class="fundo">
         <header>
-            <h3 class="tituloprinci">Sistema De Reserva e Rastreamento de Hardware</h3>
+            <h3 class="tituloprinci">Sistema De Reserva e Rastreamento de Equipamento</h3>
         </header>
 
         <div class="pesquisas">
             <select id="selectusu">
-                <option>Código</option>
+                <option>CÃ³digo</option>
                 <option>Tipo</option>
                 <option>Nome</option>
                 <option>Status</option>
@@ -64,11 +64,11 @@
                 <thead>
                     <tr>
                         <th></th>
-                        <th style="text-align: center;">Código</th>
+                        <th style="text-align: center;">CÃ³digo</th>
                         <th>Equipamento</th>
                         <th>Tipo</th>
-                        <th>Usuário</th>
-                        <th>Data Início</th>
+                        <th>UsuÃ¡rio</th>
+                        <th>Data InÃ­cio</th>
                         <th>Data Final</th>
                         <th style="text-align: center;">Motivo</th>
                         <th style="text-align: center;">Status</th>
@@ -94,7 +94,7 @@
         </div>
 
         <div class="botoes">
-            <button class="botaoHistorico">Histórico</button>
+            <button class="botaoHistorico">HistÃ³rico</button>
             <button id="botaoReservas">Minhas Reservas</button>
             <button id="botaoCriarReserva">Criar Reserva</button>
         </div>
@@ -107,9 +107,9 @@
         <div id="listaMinhasReservas">
             <div class="linhaMinhasReservas cabecalho">
                 <div class="coluna"><b>Equipamento</b></div>
-                <div class="coluna"><b>Data Início</b></div>
+                <div class="coluna"><b>Data InÃ­cio</b></div>
                 <div class="coluna"><b>Data Final</b></div>
-                <div class="coluna"><b>Ações</b></div>
+                <div class="coluna"><b>AÃ§Ãµes</b></div>
             </div>
         </div>
     </div>
@@ -133,7 +133,7 @@
             <input id="dataFinal" type="date">
             <p>Motivo</p>
             <input id="motivo" type="text" placeholder="Motivo">
-            <a href="#" id="mostrarHistorico" style="text-align: center;"><p>Clique para acessar o histórico do equipamento selecionado!</p></a>
+            <a href="#" id="mostrarHistorico" style="text-align: center;"><p>Clique para acessar o histÃ³rico do equipamento selecionado!</p></a>
         </div>
         <button id="botaoConfirmar">Confirmar</button>
     </div>
@@ -151,62 +151,45 @@
             <input id="nomeEquipa" type="text" placeholder="Nome">
             <p>Tipo</p>
             <select id="tipoEquipa">
-                <option value="" disabled selected>Tipos</option>
-                <option>Externo</option>
-                <option>Interno</option>
+                <option value="" disabled selected><-- SELECIONE --></option>
+                <!-- BEGIN BLOCK_SELECT_TIPO -->
+                <option value="[vcodigotipo]">[vnometipo]</option>
+                <!-- END BLOCK_SELECT_TIPO -->
             </select>
         </div>
 
         <button id="botaoConfirmarEquipa">Confirmar</button>
     </div>
 
-    <!--!------------------- ADICIONAR TIPO --------------------->
-    <div id="adicionarTipo" class="modal">
-
-        <h3 class="tituloModal">Incluir Equipamento</h3>
-        <div id="listaCriarEquipa">
-            <p>Nome</p>
-            <input id="nomeEquipa" type="text" placeholder="Nome">
-            <p>Tipo</p>
-            <select id="tipoEquipa">
-                <option value="" disabled selected>Tipos</option>
-                <option>Externo</option>
-                <option>Interno</option>
-            </select>
-        </div>
-
-        <button id="botaoConfirmarEquipa">Confirmar</button>
-        <button id="excluirTipo">Excluir</button>
-    </div>
 
     <!--!------------------- ALTERAR STATUS --------------------->
     <div id="alterarStatus" class="modal">
 
         <h3 class="tituloModal">Alterar Status</h3>
 
-        <!--inativo      ? nunca mais será usado 
+        <!--inativo      ? nunca mais serÃ¡ usado 
             manutencao   ? sendo consertado 
             disponivel   ? pode reservar 
         -->
         <div id="detalhes">
-            <h4>Informações Principais</h4>
+            <h4>InformaÃ§Ãµes Principais</h4>
             <h5>Equipamento: <span id="EquipaNome"></span></h5>
             <h5>Status atual: <span id="statusEquipa"></span></h5>
         </div>
 
         <select id="selectStatus">
-            <option value="Disponível">Disponível</option>
-            <option value="Manutenção">Manutenção</option>
+            <option value="DisponÃ­vel">DisponÃ­vel</option>
+            <option value="ManutenÃ§Ã£o">ManutenÃ§Ã£o</option>
             <option value="Inativo">Inativo</option>
         </select>
 
         <button id="botaoConfirmarSt">Confirmar</button>
     </div>
 
-    <!--!------------------- HISTÓRICO USU E ADM--------------------->
+    <!--!------------------- HISTÃ“RICO USU E ADM--------------------->
     <div id="historico" class="modal">
         <div class="cabecalhoModal">
-            <h3 class="tituloModal">Histórico de Reservas</h3>
+            <h3 class="tituloModal">HistÃ³rico de Reservas</h3>
         </div>
 
         <br>
@@ -214,21 +197,19 @@
     </div>
 
     <div id="padrao" style="display: none;">
-        <div class="voltar-container">
-        <button class="voltar">Voltar</button>
-    </div>
-        <iframe id="padraoIframe" style="height:30rem; width: 100%; margin-top: 30px;"></iframe>
+        <button class="sair">Sair</button>
+        <iframe id="padraoIframe" style="height:45.5rem; width: 100%; margin-bottom: 30rem;"></iframe>
     </div>
     <!--!------------------- TELA ADM --------------------->
     <div id="adm">
         <div class="fundo2">
             <header>
-                <h3 class="tituloprinci">Sistema De Reserva e Rastreamento de Hardware - ADM</h3>
+                <h3 class="tituloprinci">Sistema De Reserva e Rastreamento de Equipamento - ADM</h3>
             </header>
 
             <div class="pesquisas">
                 <select id="selectadm">
-                    <option>Código</option>
+                    <option>CÃ³digo</option>
                     <option>Tipo</option>
                     <option>Nome</option>
                     <option>Status</option>
@@ -260,11 +241,11 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th style="text-align: center;">Código</th>
+                            <th style="text-align: center;">CÃ³digo</th>
                             <th>Equipamento</th>
                             <th>Tipo</th>
-                            <th>Usuário</th>
-                            <th>Data Início</th>
+                            <th>UsuÃ¡rio</th>
+                            <th>Data InÃ­cio</th>
                             <th>Data Final</th>
                             <th style="text-align: center;">Motivo</th>
                             <th style="text-align: center;">Status</th>
@@ -290,7 +271,7 @@
             </div>
 
             <div class="botoes">
-                <button class="botaoHistorico">Histórico</button>
+                <button class="botaoHistorico">HistÃ³rico</button>
                 <button id="botaoAdicionar" style="width: 10.5rem;">Incluir Equipamento</button>
                 <button id="botaoAlterar">Alterar Status</button>
                 <button id="botaoReservasADM">Minhas Reservas</button>
