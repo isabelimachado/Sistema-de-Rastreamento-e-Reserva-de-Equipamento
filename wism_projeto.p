@@ -24,7 +24,7 @@ run p_atualizar_reservas.
 run p_replace_html.        
 run p_show_html.
 
-//?registro de usuario, obs: vadm-fput é pq nao dava pra colocar as condicoes dentro do fput
+//?registro de usuario, obs: vadm-fput Ã© pq nao dava pra colocar as condicoes dentro do fput
 //! ------------------- REGISTRO USUARIO -------------------
 procedure p_gravar:
     def var vjson     as longchar.
@@ -63,8 +63,7 @@ procedure p_alterar_reserva:
 
     assign vid = int(get-value("vcodigo_reserva")) no-error.
 
-    find first reservaEquipa exclusive-lock 
-        where reservaEquipa.vcodigo_reserva = vid no-error.
+    find first reservaEquipa exclusive-lock where reservaEquipa.vcodigo_reserva = vid no-error.
 
     if not avail reservaEquipa then do:
         fput('~{"msg":false~}').
@@ -75,7 +74,7 @@ procedure p_alterar_reserva:
         vdata_inicio = date(int(get-value("di_mes")), int(get-value("di_dia")), int(get-value("di_ano")))
         vdata_final = date(int(get-value("df_mes")), int(get-value("df_dia")), int(get-value("df_ano"))).
 
-    if vdata_final <= vdata_inicio then do:
+    if vdata_final <= vdata_inicio or  vdata_inicio = reservaEquipa.data_inicio and vdata_final = reservaEquipa.data_final then do:
         fput('~{"msg":false~}').
         quit.
     end.
@@ -95,7 +94,7 @@ procedure p_login:
     find first usuarioEquipa no-lock where usuarioEquipa.email = get-value("email") and usuarioEquipa.senha = get-value("senha") no-error.
 
     if not avail usuarioEquipa then do:
-        fput('~{"msg":"E-mail ou senha inválidos"}').
+        fput('~{"msg":"E-mail ou senha invÃ¡lidos"}').
         quit.
     end.
 
@@ -113,7 +112,7 @@ procedure p_load_html:
     vtpl2 = new Template(vpad-html2).
 end procedure.
 
-//?resumo: equipamento na tela usuário,na tela de adm equipamento com -- se nn tiver reserva, agora se tiver desse msm equipamento, procura o usuario e o setor dele, dps so atribui tudo para as var do block 
+//?resumo: equipamento na tela usuÃ¡rio,na tela de adm equipamento com -- se nn tiver reserva, agora se tiver desse msm equipamento, procura o usuario e o setor dele, dps so atribui tudo para as var do block 
 //! ------------------- REPLACE HTML -------------------
 procedure p_replace_html:
     def var vcache        as char.
@@ -134,45 +133,63 @@ procedure p_replace_html:
     vtpl2:troca("[cache]", vcache).
     vtpl2:block("BLOCK_CACHE_REGISTRO").
 
-    for each equipamento where equipamento.vstatus = "Disponível" no-lock:
+    for each tipoEquipa no-lock:
+        vtpl1:troca("[vcodigotipo]", string(tipoEquipa.vcodigo)).
+        vtpl1:troca("[vnometipo]", tipoEquipa.vnometipo).
+        vtpl1:block("BLOCK_SELECT_TIPO").
+    end.
+
+    for each equipamento where equipamento.vstatus = "DisponÃ­vel" no-lock:
         vtpl1:troca("[vcodigo]", string(equipamento.codigo)).
         vtpl1:troca("[vnome]", equipamento.vnome).
         vtpl1:block("BLOCK_SELECT_EQUIPA").
     end.
 
     for each equipamento no-lock:
-    assign
-        vtipo_adm     = "--"
-        vusu_adm      = "--"
-        vdata_ini_adm = "--"
-        vdata_fim_adm = "--"
-        vmotivo_adm   = "--".
 
-    release usuarioEquipa.
-    release reservaEquipa.
+        assign
+            vtipo_adm     = "--"
+            vusu_adm      = "--"
+            vdata_ini_adm = "--"
+            vdata_fim_adm = "--"
+            vmotivo_adm   = "--".
 
-    find last reservaEquipa no-lock where reservaEquipa.vcodigo_equipa = equipamento.codigo and reservaEquipa.vstatus = "Reservado" no-error.
+        release usuarioEquipa.
+        release reservaEquipa.
+        release tipoEquipa.
 
-    if avail reservaEquipa then
-        find first usuarioEquipa no-lock where usuarioEquipa.vcodigo = reservaEquipa.vcodigo_usu no-error.
+        find last reservaEquipa no-lock 
+            where reservaEquipa.vcodigo_equipa = equipamento.codigo 
+            and reservaEquipa.vstatus = "Reservado"
+            and reservaEquipa.data_final >= today 
+            no-error.
 
-    assign
-        vtipo_adm = if string(equipamento.vtipo) = "" then "--" else string(equipamento.vtipo)
-        vusu_adm = if avail usuarioEquipa then usuarioEquipa.vnome else "--"
-        vdata_ini_adm = if avail reservaEquipa and reservaEquipa.data_inicio <> ? then string(reservaEquipa.data_inicio) else "--"
-        vdata_fim_adm = if avail reservaEquipa and reservaEquipa.data_final  <> ? then string(reservaEquipa.data_final)  else "--"
-        vmotivo_adm = if avail reservaEquipa and reservaEquipa.motivo <> ""     then reservaEquipa.motivo               else "--".
+        if avail reservaEquipa then
+            find first usuarioEquipa no-lock 
+                where usuarioEquipa.vcodigo = reservaEquipa.vcodigo_usu no-error.
 
-    vtpl1:troca("[vcod]", string(equipamento.codigo)).
-    vtpl1:troca("[vnome]", equipamento.vnome).
-    vtpl1:troca("[vtipo]", vtipo_adm).
-    vtpl1:troca("[vusu]", vusu_adm).
-    vtpl1:troca("[vdata_inicio]", vdata_ini_adm).
-    vtpl1:troca("[vdata_final]", vdata_fim_adm).
-    vtpl1:troca("[vmotivo]", vmotivo_adm).
-    vtpl1:troca("[vstatus]", equipamento.vstatus).
-    vtpl1:block("BLOCK_EQUIPA").
-    vtpl1:block("BLOCK_ADM").
+        find first tipoEquipa no-lock 
+            where tipoEquipa.vcodigo = equipamento.vtipo 
+            no-error.
+
+        assign
+            vtipo_adm     = if avail tipoEquipa then tipoEquipa.vnometipo else "--"
+            vusu_adm      = if avail usuarioEquipa then usuarioEquipa.vnome else "--"
+            vdata_ini_adm = if avail reservaEquipa and reservaEquipa.data_inicio <> ? then string(reservaEquipa.data_inicio) else "--"
+            vdata_fim_adm = if avail reservaEquipa and reservaEquipa.data_final  <> ? then string(reservaEquipa.data_final)  else "--"
+            vmotivo_adm   = if avail reservaEquipa and reservaEquipa.motivo <> "" then reservaEquipa.motivo else "--".
+
+        vtpl1:troca("[vcod]", string(equipamento.codigo)).
+        vtpl1:troca("[vnome]", equipamento.vnome).
+        vtpl1:troca("[vtipo]", vtipo_adm).
+        vtpl1:troca("[vusu]", vusu_adm).
+        vtpl1:troca("[vdata_inicio]", vdata_ini_adm).
+        vtpl1:troca("[vdata_final]", vdata_fim_adm).
+        vtpl1:troca("[vmotivo]", vmotivo_adm).
+        vtpl1:troca("[vstatus]", equipamento.vstatus).
+        vtpl1:block("BLOCK_EQUIPA").
+        vtpl1:block("BLOCK_ADM").
+
     end.
     
 end procedure.
@@ -189,8 +206,8 @@ procedure p_incluir_equipamento:
     assign
         equipamento.codigo  = vultimo + 1
         equipamento.vnome   = url-decode(get-value("vnome"))
-        equipamento.vtipo   = int(url-decode(get-value("vtipo")))
-        equipamento.vstatus = "Disponível".
+        equipamento.vtipo   = int(get-value("vtipo")) 
+        equipamento.vstatus = "DisponÃ­vel".
 
     fput('~{"msg":true~}').
     quit.
@@ -202,13 +219,13 @@ procedure p_atualizar_reservas:
         find first equipamento exclusive-lock where equipamento.codigo = reservaEquipa.vcodigo_equipa no-error.
         
         if avail equipamento then
-            equipamento.vstatus = "Disponível".
-            reservaEquipa.vstatus = "Disponível".
+            equipamento.vstatus = "DisponÃ­vel".
+            reservaEquipa.vstatus = "DisponÃ­vel".
         end.
 end procedure.
 
 
-//! NÃO TA DANDO CERTO - deu :)
+//! NÃƒO TA DANDO CERTO - deu :)
 //?mostrar as reservas das mais recentes, e para baixo as mais antigas algo assim
 //! ------------------- MINHAS RESERVAS -------------------
 procedure p_minhas_reservas:
@@ -265,7 +282,7 @@ procedure p_cancelar_reserva:
         reservaEquipa.vstatus = "Cancelado".
 
     if avail equipamento then
-        assign equipamento.vstatus = "Disponível".
+        assign equipamento.vstatus = "DisponÃ­vel".
 
     fput('~{"msg":true~}').
 end procedure.
@@ -321,14 +338,14 @@ procedure p_alterar_status:
     find last reservaEquipa exclusive-lock where reservaEquipa.vcodigo_equipa = vcodigo_eq and reservaEquipa.vstatus = "Reservado" no-error.
 
     if avail reservaEquipa then do:
-        assign reservaEquipa.vstatus = "Disponível". 
+        assign reservaEquipa.vstatus = "DisponÃ­vel". 
     end.
 
     fput('~{"msg":true~}').
     quit.
 end procedure.
 
-//! ------------------- FUNÇÕES NAVEGADOR -------------------
+//! ------------------- FUNÃ‡Ã•ES NAVEGADOR -------------------
 procedure p_show_html:
     vtpl1:show().
     vtpl2:show().
