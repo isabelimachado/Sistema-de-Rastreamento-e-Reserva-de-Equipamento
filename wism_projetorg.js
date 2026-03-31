@@ -1,5 +1,6 @@
 let cadastrando = false;
 let logando = false;
+//flags para não dar clique duas vezes quando já fizer login/registro
 
 function mostrarSnack(texto, tipo = "info") {
     let cor = "#2196F3";
@@ -20,9 +21,8 @@ function mostrarSnack(texto, tipo = "info") {
 }
 
 $(document).ready(function () {
-
+    //resumo: pega usuario que tiver salvo no navegador e verifica se tiver logado, se tiver esconde as telas de registro/login e aplica o estilo do body padrão das tela,agora se nao tiver, as telas ficam escondidas 
     let usuario = JSON.parse(sessionStorage.getItem("usuario"));
-    
     if (usuario) {
         window.vCodUsuarioLogado = usuario.codigo;
 
@@ -34,38 +34,28 @@ $(document).ready(function () {
             "flex-direction": "column",
             "display": "flex",
         });
-
-        if (usuario.tipo === "ADM") {
-            $("#adm").show();
-            $(".fundo2").show();
-        } else {
-            $(".fundo").show();
-        }
         return;
     }
-
     $(".fundo").hide();
     $("#adm").hide();
 
-    $("#IrTelaRegistra").click(function (e) {
-        e.preventDefault();
+    $("#IrTelaRegistra").click(function () {
         $("#login").hide();
         $("#registro").show();
     });
 
-    $("#IrTelaLogin").click(function (e) {
-        e.preventDefault();
+    $("#IrTelaLogin").click(function () {
         $("#login").show();
         $("#registro").hide();
     });
 
+    //resumo: se tiver dado enter e não tiver cadastrando, isso em qlqr input, ele da click no botão de cadastro
     $("#nome, #setor, #emailRegistro, #senhaRegistro").on("keydown", function (e) {
-        if (e.key === "Enter" && !cadastrando) $("#fazerCadastro").trigger("click");
+        if (e.key === "Enter" && !cadastrando) 
+        $("#fazerCadastro").trigger("click");
     });
-
-    $("#fazerCadastro").on("click", function (e) {
-        e.preventDefault();
-
+    //resumo: pega valor de cada campo tirando os espaços, faz validação de campos, todo email devem terminar com  @agrosys.com.br, envia pro ajax, se vier a msg de erro vai fica falso e mostra o snack, pega as informacoes do json.session do usuario, código e se for adm, faz um ternerario no caso
+    $("#fazerCadastro").on("click", function () {
         const nome = $("#nome").val().trim();
         const setor = $("#setor").val();
         const email = $("#emailRegistro").val().trim();
@@ -77,7 +67,7 @@ $(document).ready(function () {
         }
 
         if (!email.endsWith("@agrosys.com.br")) {
-            mostrarSnack("Formato de e-mail inv�lido!", "erro");
+            mostrarSnack("Formato de e-mail inválido!", "erro");
             return;
         }
 
@@ -103,7 +93,7 @@ $(document).ready(function () {
                 tipo: data.adm ? "ADM" : "USU"
             }));
 
-            mostrarSnack("Usu�rio cadastrado!", "sucesso");
+            mostrarSnack("Usuário cadastrado!", "sucesso");
 
             setTimeout(() => {
                 location.reload(); 
@@ -116,12 +106,11 @@ $(document).ready(function () {
     });
 
     $("#emailLogin, #senhaLogin").on("keydown", function (e) {
-        if (e.key === "Enter" && !logando) $("#fazerLogin").trigger("click");
+        if (e.key === "Enter" && !logando) 
+        $("#fazerLogin").trigger("click");
     });
 
-    $("#fazerLogin").on("click", function (e) {
-        e.preventDefault();
-
+    $("#fazerLogin").on("click", function () {
         const email = $("#emailLogin").val().trim();
         const senha = $("#senhaLogin").val().trim();
 
@@ -140,7 +129,7 @@ $(document).ready(function () {
         )
         .then((data) => {
             if (!data || !data.vcodigo) {
-                mostrarSnack("E-mail ou senha inv�lidos!", "erro");
+                mostrarSnack("E-mail ou senha inválidos!", "erro");
                 logando = false;
                 return;
             }
@@ -149,9 +138,6 @@ $(document).ready(function () {
                 codigo: data.vcodigo,
                 tipo: data.adm ? "ADM" : "USU"
             }));
-
-            window.vCodUsuarioLogado = data.vcodigo;
-
             mostrarSnack("Login realizado!", "sucesso");
 
             setTimeout(() => {
@@ -162,12 +148,6 @@ $(document).ready(function () {
             console.error(error);
             logando = false;
         });
-    });
-
-    $("#logout").click(function () {
-        sessionStorage.removeItem("usuario");
-        localStorage.removeItem("usuario");
-        location.reload();
     });
 
 });
