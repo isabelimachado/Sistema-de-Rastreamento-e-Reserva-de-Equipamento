@@ -16,10 +16,20 @@ body {
     min-height: 100vh;
 }
 
-/*!------------------- TELA REGISTRO -------------------*/
+h2 {
+    font-family: "Nunito", sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    text-align: center;
+    color: #e8f4ff;
+    text-align: center;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
 
-#registro,
-#login {
+/*!------------------- TELA REGISTRO E LOGIN -------------------*/
+
+#registro,#login {
     padding: 50px;
     width: 90%;
     max-width: 700px;
@@ -35,90 +45,6 @@ body {
 
 #registro {
     display: none;
-}
-
-#botaoConfirmarSt,
-#botaoConfirmarEquipa,
-#botaoConfirmar,
-.botaoCancelar,
-.botaoAlterar {
-    background-image: linear-gradient(#DEEDF8 50%, #d6e9f7 50%);
-    font-weight: 600;
-    width: 130px;
-    color: rgb(46, 110, 158);
-    height: 23px;
-    margin-right: 4px;
-    min-width: 100px;
-    cursor: pointer;
-    font-weight: 600;
-    display: block;
-    margin: 20px auto;
-    border: 1px solid #79B7E7;
-    border-radius: 2px;
-    outline: 0px;
-}
-
-.botaoCancelar,
-.botaoAlterar,
-.voltar {
-    background-image: linear-gradient(#DEEDF8 50%, #d6e9f7 50%);
-    font-weight: 600;
-    width: 110px;
-    color: rgb(46, 110, 158);
-    height: 23px;
-    margin-right: 4px;
-    min-width: 100px;
-    cursor: pointer;
-    font-weight: 600;
-    display: block;
-    margin: 10px auto;
-    border: 1px solid #79B7E7;
-    border-radius: 2px;
-    outline: 0px;
-}
-
-.voltar {
-    position: fixed;
-    top: 29.97rem;
-    right: 14rem;
-    margin: 0;
-    z-index: 100;
-}
-
-.botaoCancelar:hover, 
-.botaoAlterar:hover,
-.voltar:hover {
-    background-image: none;
-    background-color: #ffffff;
-    color: #ff5b35;
-    border-color: #ff6d2e;
-}
-
-#botaoConfirmarSt:hover,
-#botaoConfirmarEquipa:hover,
-#botaoConfirmar:hover,
-.linhaMinhasReservas .colunaBotoes .botaoConfirmarAlt:hover, .botaoCancelarAlt:hover  {
-    background-image: none;
-    background-color: #ffffff;
-    color: #ff5b35;
-    border-color: #ff6d2e;
-}
-
-.linhaMinhasReservas .colunaBotoes .botaoConfirmarAlt, .botaoCancelarAlt {
-    background-image: linear-gradient(#DEEDF8 50%, #d6e9f7 50%);
-    font-weight: 600;
-    width: 110px;
-    color: rgb(46, 110, 158);
-    height: 23px;
-    margin-right: 4px;
-    min-width: 100px;
-    cursor: pointer;
-    font-weight: 600;
-    display: block;
-    margin: 10px auto;
-    border: 1px solid #79B7E7;
-    border-radius: 2px;
-    outline: 0px;
 }
 
 #inputeselect {
@@ -137,8 +63,7 @@ body {
     letter-spacing: 1px;
 }
 
-#login span,
-#registro span {
+#login span,#registro span {
     display: flex;
     justify-content: center;
     color: rgba(200, 225, 255, 0.6);
@@ -146,16 +71,14 @@ body {
     margin-top: 20px;
 }
 
-#login a,
-#registro a {
+#login a,#registro a {
     display: block;
     text-align: center;
     text-decoration: none;
     margin-top: 20px;
 }
 
-#login a span,
-#registro a span {
+#login a span,#registro a span {
     color: rgba(160, 211, 255, 0.825);
     font-size: 14px;
     transition: color 0.2s;
@@ -165,28 +88,15 @@ body {
     display: inline;
 }
 
-#registro input:-webkit-autofill,
-#login input:-webkit-autofill {
+#registro input:-webkit-autofill,#login input:-webkit-autofill {
     -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.07) inset;
     -webkit-text-fill-color: #e8f4ff;
     transition: background-color 5000s ease-in-out 0s;
 }
 
-#login a:hover span,
-#registro a:hover span {
+#login a:hover span,#registro a:hover span {
     color: rgb(182, 219, 251);
     border-bottom-style: solid;
-}
-
-h2 {
-    font-family: "Nunito", sans-serif;
-    font-size: 2rem;
-    font-weight: 800;
-    text-align: center;
-    color: #e8f4ff;
-    text-align: center;
-    letter-spacing: 3px;
-    text-transform: uppercase;
 }
 
 #login h2::after {
@@ -270,8 +180,7 @@ h2 {
     gap: 10px;
 }
 
-#registro button,
-#login button {
+#registro button, #login button {
     background-image: linear-gradient(#DEEDF8 50%, #d6e9f7 50%);
     padding: 10px 15px;
     color: #2e6e9e;
@@ -286,15 +195,118 @@ h2 {
     margin: 20px auto 0 auto;
 }
 
-#registro button:hover,
-#login button:hover {
+#registro button:hover,#login button:hover {
     transform: scale(1.05);
 }
 
-#registro button:active,
-#login button:active {
+#registro button:active,#login button:active {
     transform: scale(0.95);
     transition: 0.8 ease;
+}
+
+/*!------------------- BOTÕES -------------------*/
+
+#botaoConfirmarSt,#botaoConfirmarEquipa,#botaoConfirmar,.botaoCancelar,.botaoAlterar {
+    background-image: linear-gradient(#DEEDF8 50%, #d6e9f7 50%);
+    font-weight: 600;
+    width: 130px;
+    color: rgb(46, 110, 158);
+    height: 23px;
+    margin-right: 4px;
+    min-width: 100px;
+    cursor: pointer;
+    font-weight: 600;
+    display: block;
+    margin: 20px auto;
+    border: 1px solid #79B7E7;
+    border-radius: 2px;
+    outline: 0px;
+}
+
+.botaoCancelar,.botaoAlterar,.sair {
+    background-image: linear-gradient(#DEEDF8 50%, #d6e9f7 50%);
+    font-weight: 600;
+    width: 110px;
+    color: rgb(46, 110, 158);
+    height: 23px;
+    margin-right: 4px;
+    min-width: 100px;
+    cursor: pointer;
+    font-weight: 600;
+    display: block;
+    margin: 10px auto;
+    border: 1px solid #79B7E7;
+    border-radius: 2px;
+    outline: 0px;
+}
+
+.sair {
+    position: fixed;
+    top: 38.1rem;
+    right: 14rem;
+    margin: 0;
+}
+
+.botaoCancelar:hover, .botaoAlterar:hover,.sair:hover {
+    background-image: none;
+    background-color: #ffffff;
+    color: #ff5b35;
+    border-color: #ff6d2e;
+}
+
+#botaoConfirmarSt:hover,#botaoConfirmarEquipa:hover,#botaoConfirmar:hover,.linhaMinhasReservas .colunaBotoes .botaoConfirmarAlt:hover, .botaoCancelarAlt:hover  {
+    background-image: none;
+    background-color: #ffffff;
+    color: #ff5b35;
+    border-color: #ff6d2e;
+}
+
+.linhaMinhasReservas .colunaBotoes .botaoConfirmarAlt, .botaoCancelarAlt {
+    background-image: linear-gradient(#DEEDF8 50%, #d6e9f7 50%);
+    font-weight: 600;
+    width: 110px;
+    color: rgb(46, 110, 158);
+    height: 23px;
+    margin-right: 4px;
+    min-width: 100px;
+    cursor: pointer;
+    font-weight: 600;
+    display: block;
+    margin: 10px auto;
+    border: 1px solid #79B7E7;
+    border-radius: 2px;
+    outline: 0px;
+}
+
+.botoes {
+    display: flex;
+    justify-content: flex-end;
+    margin: 10px 6px;
+    gap: 2px;
+}
+
+.botoes button {
+    background-image: linear-gradient(#DEEDF8 50%, #d6e9f7 50%);
+    font-weight: 600;
+    width: 130px;
+    color: rgb(46, 110, 158);
+    height: 23px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    margin-right: 4px;
+    min-width: 100px;
+    cursor: pointer;
+    font-weight: 600;
+    border: 1px solid #79B7E7;
+    border-radius: 2px;
+    outline: 0px;
+}
+
+.botoes button:hover {
+    background-image: none;
+    background-color: #ffffff;
+    color: #ff5b35;
+    border-color: #ff6d2e;
 }
 
 /*!------------------- TELA PRINCIPAL ------------------- */
@@ -379,14 +391,12 @@ hr {
     margin-top: 6px;
 }
 
-.fundo2 .pesquisas span:last-child,
-.fundo .pesquisas span:last-child {
+.fundo2 .pesquisas span:last-child,.fundo .pesquisas span:last-child {
     font-size: 16px;
     line-height: 1;
 }
 
-#selectusu,
-#selectadm {
+#selectusu,#selectadm {
     border: 1px solid #82b5dc;
     width: 4.1rem;
     height: 23px;
@@ -396,8 +406,7 @@ hr {
     color: #2b4184;
 }
 
-#vpad-pesqusu,
-#vpad-pesqadm {
+#vpad-pesqusu,#vpad-pesqadm {
     border: 1px solid #82b5dc;
     width: 9rem;
     border-radius: 2px;
@@ -407,10 +416,7 @@ hr {
     height: 20px;
 }
 
-#vpad-pesqadm,
-#selectadm,
-#vpad-pesqusu,
-#selectusu {
+#vpad-pesqadm,#selectadm,#vpad-pesqusu,#selectusu {
     margin-top: 6px;
 }
 
@@ -437,53 +443,13 @@ hr {
     background: #d6ebfb;
 }
 
-.fundo {
+.fundo,.fundo2  {
     border-radius: 4px;
     border: #7bacd6 solid 1px;
     padding: 1.7px;
     height: calc(100vh - 19.5px);
     display: flex;
     flex-direction: column;
-}
-
-.fundo2 {
-    border-radius: 4px;
-    border: #7bacd6 solid 1px;
-    padding: 1.7px;
-    height: calc(100vh - 19.5px);
-    display: flex;
-    flex-direction: column;
-}
-
-.botoes {
-    display: flex;
-    justify-content: flex-end;
-    margin: 10px 6px;
-    gap: 2px;
-}
-
-.botoes button {
-    background-image: linear-gradient(#DEEDF8 50%, #d6e9f7 50%);
-    font-weight: 600;
-    width: 130px;
-    color: rgb(46, 110, 158);
-    height: 23px;
-    margin-top: 3px;
-    margin-bottom: 3px;
-    margin-right: 4px;
-    min-width: 100px;
-    cursor: pointer;
-    font-weight: 600;
-    border: 1px solid #79B7E7;
-    border-radius: 2px;
-    outline: 0px;
-}
-
-.botoes button:hover {
-    background-image: none;
-    background-color: #ffffff;
-    color: #ff5b35;
-    border-color: #ff6d2e;
 }
 
 table tbody tr:nth-child(even) td {
@@ -506,13 +472,62 @@ tr:last-child.linha-selecionada td {
     border-bottom: none !important;
 }
 
-/*!-------------------MINHAS RESERVAS E CRIAR RESERVA, HIST�RICO, INCLUIR EQUIPAMENTO------------------- */
+.datas {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
+}
+
+.datas label {
+    position: absolute;
+    top: -8px;
+    left: 6px;
+    background: #fff;
+    padding: 0 3px;
+    z-index: 1;
+    font-size: 11px;
+    font-weight: bold;
+    color: #79b7e7;
+    white-space: nowrap;
+}
+
+.datas input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+.datas input[type="date"] {
+    height: 23px;
+    width: 120px;
+    border: 1px solid #82b5dc;
+    border-radius: 2px;
+    padding: 2px 5px;
+    font-size: 13px;
+    color: black;
+    background: #fff;
+    outline: none;
+    text-align: right;
+}
+
+/*!-------------------MINHAS RESERVAS, ALTERAR RESERVAS+DETALHES, CRIAR RESERVA, HISTÓRICO, INCLUIR EQUIPAMENTO------------------- */
+
+.tituloModal {
+    font-size: 30px;
+    font-weight: 600;
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 8px;
+}
+
 #alterarStatus {
     display: none;
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -60%);
+    transform: translate(-50%, -50%);
     width: 900px;
     max-height: 520px;
     background: white;
@@ -561,7 +576,7 @@ tr:last-child.linha-selecionada td {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -60%);
+    transform: translate(-50%, -50%);
     width: 90vw;
     max-width: 1100px;
     max-height: 80vh;
@@ -603,8 +618,7 @@ tr:last-child.linha-selecionada td {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
-#criarReserva,
-#cadastroEquipamento {
+#criarReserva,#cadastroEquipamento {
     display: none;
     position: fixed;
     top: 50%;
@@ -618,15 +632,13 @@ tr:last-child.linha-selecionada td {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
-.listaCriar p,
-#listaCriarEquipa p {
+.listaCriar p,#listaCriarEquipa p {
     margin: 0;
     font-weight: bold;
     color: #1a395e;
 }
 
-.listaCriar,
-#listaCriarEquipa {
+.listaCriar, #listaCriarEquipa {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -651,8 +663,7 @@ tr:last-child.linha-selecionada td {
     color: #6b6b6b;
 }
 
-.listaCriar input,
-#listaCriarEquipa input {
+.listaCriar input,#listaCriarEquipa input {
     width: 100%;
     box-sizing: border-box;
     padding: 8px 10px;
@@ -663,21 +674,10 @@ tr:last-child.linha-selecionada td {
     color: #6b6b6b;
 }
 
-.listaCriar input:focus,
-#listaCriarEquipa input:focus {
+.listaCriar input:focus,#listaCriarEquipa input:focus {
     outline: none;
     border: 1px solid #1a395e;
     box-shadow: 0 0 4px rgba(26, 57, 94, 0.3);
-}
-
-.tituloModal {
-    font-size: 30px;
-    font-weight: 600;
-    color: #2c3e50;
-    text-align: center;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #2c3e50;
-    padding-bottom: 8px;
 }
 
 .linhaMinhasReservas {
@@ -693,6 +693,22 @@ tr:last-child.linha-selecionada td {
     background-color: #DEEDF8;
     border-top: 1px solid #79B7E7;
     font-size: 19;
+}
+
+.linhaMinhasReservas .coluna input[type="date"] {
+    width: 100%;
+    padding: 5px 8px;
+    border-radius: 4px;
+    border: none;
+    font-size: 14px;
+    background-color: #ffffff;
+    border: 1px solid #82b5dc;
+    cursor: text;
+}
+
+.linhaMinhasReservas .coluna input[type="date"]:focus {
+    border: 1px solid #82b5dc;
+    outline: none;
 }
 
 .coluna {
@@ -720,7 +736,6 @@ tr:last-child.linha-selecionada td {
     font-style: italic;
 }
 
-
 #selectStatus {
     display: block;
     margin: 0 auto;
@@ -734,6 +749,21 @@ tr:last-child.linha-selecionada td {
     outline: none;
     cursor: pointer;
 }
+
+.selectEquipa {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    transition: 0.2s;
+    color: #6b6b6b;
+    background: white;
+    outline: none;
+}
+
+/*!-------------------OUTRAS COISAS-------------------*/
 
 #adm {
     display: none;
@@ -751,6 +781,7 @@ tr:last-child.linha-selecionada td {
     right: 16px;
 }
 
+
 @keyframes aparecer {
     from {
         opacity: 0;
@@ -763,83 +794,9 @@ tr:last-child.linha-selecionada td {
     }
 }
 
-.filtros {
-    display: flex;
-    align-items: flex-end;
-    padding: 6px 10px;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-    gap: 8px;
-}
-
-.datas {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-}
-
-.datas label {
-    position: absolute;
-    top: -8px;
-    left: 6px;
-    background: #fff;
-    padding: 0 3px;
-    z-index: 1;
-    font-size: 11px;
-    font-weight: bold;
-    color: #79b7e7;
-    white-space: nowrap;
-}
-
-.datas input[type="date"]::-webkit-calendar-picker-indicator {
-    display: none;
-    -webkit-appearance: none;
-}
-
-.datas input[type="date"] {
-    height: 23px;
-    width: 120px;
-    border: 1px solid #82b5dc;
-    border-radius: 2px;
-    padding: 2px 5px;
-    font-size: 13px;
-    color: black;
-    background: #fff;
-    outline: none;
-    text-align: right;
-}
-
-.selectEquipa {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 8px 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-    transition: 0.2s;
-    color: #6b6b6b;
-    background: white;
-    outline: none;
-}
 
 
-.linhaMinhasReservas .coluna input[type="date"] {
-    width: 100%;
-    padding: 5px 8px;
-    border-radius: 4px;
-    border: none;
-    font-size: 14px;
-    background-color: #ffffff;
-    border: 1px solid #82b5dc;
 
-    cursor: text;
-}
-
-.linhaMinhasReservas .coluna input[type="date"]:focus {
-    border: 1px solid #82b5dc;
-    outline: none;
-}
 
 
 
