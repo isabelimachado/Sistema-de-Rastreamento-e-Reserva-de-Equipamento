@@ -1,6 +1,8 @@
 $(document).ready(function () {
     //!-------------------VALIDACOES USUÁRIO-------------------
     //resumo: pega código do usuario cadastrado no navegador,cria uma variavel q retorna um json q vira um object com as info do usuario, dps atribui o codigo do navegador para ele, e verifica senao tiver usuario as telas principais ficam fechadas
+    //?-POR QUE USEI SESSION STORAGE EM VEZ DE LOCAL STORAGE?-:
+    //? com local, o login/registro ficava o msm para todo mundo que entrava no meu projeto no erp, talvez por causa do perfil que entra no erp é o msm então seria msm sessão, com session os dados são temporarios 
     window.vCodUsuarioLogado = sessionStorage.getItem("vCodUsuarioLogado");
 
     let usuario = JSON.parse(sessionStorage.getItem("usuario"));
@@ -29,6 +31,25 @@ $(document).ready(function () {
             $(this).find("td").css("background", cor);
         });
     }
+
+    //resumo: função que pega datas em um array, pega e divide cada parte com - separado, tanto para data final ou data inicial
+    function formatarDataProgress(hifen, prefixo) {
+        let partes = hifen.split("-");
+        return {
+            [`${prefixo}_mes`]: partes[1],
+            [`${prefixo}_dia`]: partes[2],
+            [`${prefixo}_ano`]: partes[0]
+        };
+    }
+    //resumo : função para pegar primeiro tr visivel, tira o checked e a class, e dps adiciona para o primeiro, em caso de mudanças, ex: o primeiro era o 2 tr mas depois foi a 1  
+    function radioPrimeiraLinha() {
+        let primeira = $("table tbody tr:visible").first();
+        $("input[type='radio']").prop("checked", false);
+        $("tbody tr").removeClass("linha-selecionada");
+        primeira.find("input[type='radio']").prop("checked", true);
+        primeira.addClass("linha-selecionada");
+    }
+
     //resumo: sobe ate a tabela e remove a class linha-selecionada de toda, so coloca no radio selecionado,ai fica bom as bordas em volta
     function selecionarLinha(radio) {
         $(radio).closest("table").find("tbody tr").removeClass("linha-selecionada");
@@ -45,7 +66,8 @@ $(document).ready(function () {
 
             if ($.trim(html) === "") {
                 $("#listaMinhasReservas").append('<div class="semReservas">Nenhuma reserva encontrada.</div>');
-            } else {
+            }
+            else {
                 $("#listaMinhasReservas .cabecalho").after(html);
             }
 
@@ -53,35 +75,44 @@ $(document).ready(function () {
         });
     }
     //resumo: função so para realizar uma ação uma vez quando clica várias vezes num botão :)
-    //?refazer isso aqui pra cada mudança no input
     function botaoUmaVez(botao) {
         if (botao.prop("disabled")) return false;
         botao.prop("disabled", true);
         return true;
     }
-
-    //resumo: pega o tipo pelo select (adm ou usu) o tbody q vai ser percorrido, e atribui sempre "" pro input quando ordena, pega todas as linhas da tbody e compara duas vezes  sort(a,b) -ordena, se for nome, na coluna 2 se A vim antes q B vai retorna -1, senao 1, msm logica pros dms e dps adiciona no tbody conforme, so no tipo eu inverti pq achei melhor mostra os reservados primeiro, por fim /mostra nova tabela pega o primeiro q a tr tiver visivel e se for o radio do usu e adm, atribui checked e adiciona a classe das bordas
-    function ordernarSelect(select, inputPesquisa, nomeRadio, tabela) {
+    //resumo: pega o tipo da coluna pelo select, cria um let para o tbody da tabela, pega valores do input, apos isso, encontra todas as tr, se for nome, vai achar as td de nome que é a segundam segue essa logica, ate o código que a logica vira matematica, isso acontece pelo sort() que faz comparação de dois itens, dps de tudo so adiciona na tbody que for pega a primeira tr mostrada e adiciona a class e checked
+    function ordernarSelect(select, inputPesquisa, tabela) {
         let tipo = $(select).val();
         let tbody = $(tabela + " table tbody");
 
         $(inputPesquisa).val("");
 
         tbody.find("tr").sort((a, b) => {
-            if (tipo === "Nome")
-                return $(a).find("td:eq(2)").text().toLowerCase() < $(b).find("td:eq(2)").text().toLowerCase() ? -1 : 1;
-            if (tipo === "Status")
-                return $(b).find("td:last").text().toLowerCase() < $(a).find("td:last").text().toLowerCase() ? -1 : 1;
-            if (tipo === "Tipo")
-                return $(a).find("td:eq(3)").text().toLowerCase() < $(b).find("td:eq(3)").text().toLowerCase() ? -1 : 1;
-            return parseInt($(a).find("td:eq(1)").text()) - parseInt($(b).find("td:eq(1)").text());
-        })
-            .appendTo(tbody);
-        tbody.find("tr").show();
-        let primeira = tbody.find("tr:visible").first();
-        primeira.find("input[name='" + nomeRadio + "']").prop("checked", true);
-        tbody.find("tr").removeClass("linha-selecionada");
-        primeira.addClass("linha-selecionada");
+
+            let valA, valB;
+
+            if (tipo === "Nome") {
+                valA = $(a).find("td:eq(2)").text();
+                valB = $(b).find("td:eq(2)").text();
+            }
+            else if (tipo === "Status") {
+                valA = $(a).find("td:last").text();
+                valB = $(b).find("td:last").text();
+            }
+            else if (tipo === "Tipo") {
+                valA = $(a).find("td:eq(3)").text();
+                valB = $(b).find("td:eq(3)").text();
+            }
+            else {
+                valA = parseInt($(a).find("td:eq(1)").text());
+                valB = parseInt($(b).find("td:eq(1)").text());
+                return valA - valB;
+            }
+            //se o numero que resultar de a-b for negativo a vai antes, se for positivo vai na frente ex: 1-2 da -1 ent 1 vem antes de 2
+            return valA.toLowerCase().localeCompare(valB.toLowerCase());
+            //localcompare->metódo que ignora tamanho de palavras ou acentuação, junto com o sort() ele so compara se tal palavra pela inciail é maior q a outra
+        }).appendTo(tbody);
+        radioPrimeiraLinha();
         Zebra();
     }
     //resumo: snackbar com cores para cada tipo de mensagem, atirbuir o texto para ele,centralizar,adicionar cor botao e afins, alem da class tambem
@@ -102,10 +133,11 @@ $(document).ready(function () {
             actionTextColor: "#ffffff",
         });
     }
-    //resumo: função para facilitar na hora q recebe o json do progress para transformar em object para mensgaem 
+    //resumo: função para facilitar na hora q recebe o json do progress para transformar em object para mensgaem - retira qualquer ? do json
     function objectJSON(resp) {
         try {
-            return JSON.parse(resp.trim());
+            let limpo = resp.replace(/\?/g, "");
+            return JSON.parse(limpo.trim());
         }
         catch {
             return { msg: false };
@@ -114,8 +146,7 @@ $(document).ready(function () {
 
     //!-------------------HISTORICO SELECT-------------------
     //resumo: verifica se selecionou algum equipamento, se sim abre o modal q tem o iframe com o histórico filtrado pelo cóidgo do equipa
-    $("#mostrarHistorico").click(function (e) {
-        e.preventDefault();
+    $("#mostrarHistorico").click(function () {
         let codigo = $(".selectEquipa").val();
         if (!codigo) {
             mostrarSnack("Selecione um equipamento!");
@@ -167,37 +198,56 @@ $(document).ready(function () {
     });
 
     //!-------------------CONFIRMAR ALTERAÇÃO DE DATAS-------------------
-    //resumo: depois que clica no botão de confirmar alteração, pega a linha do alterar, id do botão para saber qual é a reserva, abre a requisição, fala a proceure, especifica o id, separa o dia,mes e ano para o formato do progress (mmm/dd/aaaa) com -, dps valida a resposta que o progress manda
+    //resumo: depois que clica no botão de confirmar alteração, pega a linha do alterar, id do botão para saber qual é a reserva, abre a requisição, fala a proceure, especifica o id, separa o dia,mes e ano para o formato do progress (mm/dd/aaaa) com -, dps valida a resposta que o progress manda
     $(document).on("click", ".botaoConfirmarAlt", function () {
         let botao = $(this);
         if (!botaoUmaVez(botao)) return;
-
         let linha = $(this).closest(".linhaMinhasReservas");
         let id = $(this).data("id");
 
-        let dataInicio = linha.find(".inputDataInicio").val(); // pega os valores
+        let dataInicio = linha.find(".inputDataInicio").val();
         let dataFinal = linha.find(".inputDataFinal").val();
 
-        let partesInicio = dataInicio.split("-");
-        let partesFinal = dataFinal.split("-");
-
-        $.post("", {
+        $.get("", {
             vpad_proc: "p_alterar_reserva",
             vcodigo_reserva: id,
-            di_mes: partesInicio[1],
-            di_dia: partesInicio[2],
-            di_ano: partesInicio[0],
-            df_mes: partesFinal[1],
-            df_dia: partesFinal[2],
-            df_ano: partesFinal[0]
+            ...formatarDataProgress(dataInicio, "di"),
+            ...formatarDataProgress(dataFinal, "df"),
         }, function (resp) {
             let res = objectJSON(resp);
 
-            if (res) {
+            if (res.msg === "data inicial menor que hoje") {
+                mostrarSnack("Data de início não pode ser no passado!");
+                botao.prop("disabled", false);
+                return;
+            }
+
+            else if (res.msg === "data final menor que a incial") {
+                mostrarSnack("Data final deve ser posterior à inicial!");
+                botao.prop("disabled", false);
+                return;
+            }
+
+            else if (res.msg === "datas iguais") {
+                mostrarSnack("As datas são iguais à reserva atual!");
+                botao.prop("disabled", false);
+                return;
+            }
+
+            else if (res.msg == "conflito datas") {
+                mostrarSnack("Esta data conflita com outra reserva no mesmo período!")
+                botao.prop("disabled", false);
+                return;
+            }
+
+            else if (res.msg === true) {
                 mostrarSnack("Reserva alterada com sucesso!", "sucesso");
                 location.reload();
-            } else {
+            }
+
+            else {
                 mostrarSnack("Erro ao alterar reserva!", "erro");
+                botao.prop("disabled", false);
             }
         });
     });
@@ -216,14 +266,14 @@ $(document).ready(function () {
 
         if (!confirm("Deseja cancelar a reserva?")) return;
 
-        $.post("", {
+        $.get("", {
             vpad_proc: "p_cancelar_reserva",
             vcodigo_reserva: id
         }, function (resp) {
 
             let res = objectJSON(resp);
 
-            if (res) {
+            if (res.msg === true) {
                 linha.remove();
 
                 let linhasRestantes = $("#listaMinhasReservas .linhaMinhasReservas").length;
@@ -234,7 +284,8 @@ $(document).ready(function () {
                 Zebra();
                 mostrarSnack("Reserva cancelada com sucesso!", "sucesso");
                 location.reload();
-            } else {
+            }
+            else {
                 mostrarSnack("Erro ao cancelar reserva!", "erro");
             }
         })
@@ -252,12 +303,12 @@ $(document).ready(function () {
     $("#botaoConfirmarEquipa").click(function () {
         let botao = $(this);
         if (!botaoUmaVez(botao)) return;
-
         let nome = $("#nomeEquipa").val().trim();
         let tipo = $("#tipoEquipa").val();
 
         if (!nome || !tipo) {
             mostrarSnack("Preencha todos os campos!");
+            botao.prop("disabled", false);
             return;
         }
 
@@ -268,11 +319,14 @@ $(document).ready(function () {
         }, function (resp) {
             let res = objectJSON(resp);
 
-            if (res) {
+            if (res.msg === true) {
                 mostrarSnack("Equipamento incluído com sucesso!", "sucesso");
                 location.reload();
-            } else {
+            }
+
+            else {
                 mostrarSnack("Erro ao incluir equipamento!", "erro");
+                botao.prop("disabled", false);
             }
         });
     });
@@ -296,8 +350,8 @@ $(document).ready(function () {
     });
 
     //!-------------------CONFIRMAR ALTERAR EQUIPAMENTO-------------------
+    //resumo: pega codigo do selecionado,status e o status do select, se for igual ambos, não vai salvar, senao envia tudo pro progress código e novo status e altera 
     $("#botaoConfirmarSt").click(function () {
-        //resumo: pega codigo do selecionado,status e o status do select, se for igual ambos, não vai salvar, senao envia tudo pro progress código e novo status e altera 
         let botao = $(this);
         if (!botaoUmaVez(botao)) return;
         let selecionado = $("input[name='equipamentosADM']:checked");
@@ -307,6 +361,7 @@ $(document).ready(function () {
 
         if (statusAtual === novoStatus) {
             mostrarSnack("Não tem como mudar para este status, porque já está " + statusAtual.toLowerCase())
+            botao.prop("disabled", false);
             return;
         }
 
@@ -317,17 +372,27 @@ $(document).ready(function () {
         }, function (resp) {
             let res = objectJSON(resp);
 
-            if (res) {
+            if (res.msg === "futuras reservas") {
+                mostrarSnack("Tem futuras reservadas, não tem como alterar o status");
+                botao.prop("disabled", false);
+                return;
+            }
+
+            else if (res.msg === true) {
                 Zebra();
                 mostrarSnack("Status alterado com sucesso!", "sucesso");
                 location.reload();
-            } else {
+            }
+
+            else {
                 mostrarSnack("Erro ao alterar status!", "erro");
+                botao.prop("disabled", false);
             }
         });
     });
 
     //!-------------------CONFIRMAR CRIAR RESERVA-------------------
+    //resumo: pega data inicio,data final, valor do select que é o código de cada equipamento, formata novamente as datas , evia como requisição e faz as validações, por ex: de cria reserva para um equipamento que já esta reservado naquele período
     $("#botaoConfirmar").click(function () {
         let botao = $(this);
         if (!botaoUmaVez(botao)) return;
@@ -335,115 +400,96 @@ $(document).ready(function () {
         let dataFinal = $("#dataFinal").val();
         let codigoEquipa = $(".selectEquipa").val();
         let motivo = $("#motivo").val().trim();
-        let hoje = new Date().toISOString().split("T")[0];
-
-        if (!dataInicio || !dataFinal || !motivo || !codigoEquipa) {
-            mostrarSnack("Preencha todos os campos!")
-            return;
-        }
-        if (dataInicio < hoje) {
-            mostrarSnack("Está data não bate com a atual!")
-            return;
-        }
-
-        if (dataFinal <= dataInicio) {
-            mostrarSnack("A data final não pode ser menor ou igual à do início!")
-            return;
-        }
-
-        let partes = dataInicio.split("-");
-        let partes2 = dataFinal.split("-");
 
         $.get("", {
             vpad_proc: "p_criar_reserva",
             vcodigo_equipa: codigoEquipa,
             vcodigo_usu: window.vCodUsuarioLogado,
-            di_mes: partes[1],
-            di_dia: partes[2],
-            di_ano: partes[0],
-            df_mes: partes2[1],
-            df_dia: partes2[2],
-            df_ano: partes2[0],
+            ...formatarDataProgress(dataInicio, "di"),
+            ...formatarDataProgress(dataFinal, "df"),
             motivo: agroEscape(motivo)
         }, function (resp) {
             let res = objectJSON(resp);
 
-            if (res) {
+            if (res.msg === "mesmo periodo reserva") {
+                mostrarSnack("Já possui uma reserva para este equipamento neste período!")
+                botao.prop("disabled", false);
+                return;
+            }
+
+            else if (res.msg === true) {
                 mostrarSnack("Reserva criada com sucesso!", "sucesso");
-                $.modal.close();
                 Zebra();
                 location.reload();
-            } else {
+            }
+
+            else {
                 mostrarSnack("Erro ao criar reserva!", "erro");
+                botao.prop("disabled", false);
             }
         });
     });
 
-
-    //!-------------------FILTRO DATAF E DATAI-------------------
-    $(document).on("change", "#datai, #dataf, .datai, .dataf", function () {
-        let $input = $(this);
-        let container = $input.closest(".fundo").length ? $input.closest(".fundo") : $input.closest("#adm");
-
-        let isMain = container.hasClass("fundo");
-        let valI = isMain ? container.find("#datai").val() : container.find(".datai").val();
-        let valF = isMain ? container.find("#dataf").val() : container.find(".dataf").val();
-
-        function converterDataNumero(str) {
+    // !-------------------FILTRO DE DATAS-------------------
+    //resumo: pega cada mudança dos input, pega o container mas proximo (fundo ou adm), pega os valores e inicia a funcao para converte data para o formato que aparece na table, depois aplica nos valores do input, pega cada linha do container percorre as mesma, flag pra ver se encontrou linha valida,pega as datas da colunas 6 e 5, mostrar condição para mostrar tabela ou não
+    $(".datai, .dataf").on("change", function () {
+        const container = $(this).closest(".fundo, #adm");
+        const dataInicio = container.find(".datai").val();
+        const dataFinal = container.find(".dataf").val();
+        //se data esta vazia "", -- ou nem existe, ent retorna null, remove espaço
+        const converterData = (str) => {
             if (!str || str.trim() === "" || str.includes("--")) return null;
             str = str.trim();
             let dia, mes, ano;
-
+            //se o formato é aaaa-mm-dd, pega a data, tira os hifen, e coloca cada parte dentro de um array, msm lógica caso seja "/"
             if (str.includes("-")) {
                 let partes = str.split("-");
                 [ano, mes, dia] = partes;
             } else if (str.includes("/")) {
                 let partes = str.split("/");
                 [dia, mes, ano] = partes;
-            } else { return null; }
-
-            if (ano.length === 2) ano = "20" + ano;
+            } else {
+                return null;
+            }
+            //se o tamanho do ano for dois caracteres, vai ser 20 + o ultimo dois digitos 2026, depois junta tudo do array ali e converte pra arraym ja no dia/mes faz padstart q garante q vai ser dois numeros e comeca com 0
+            if (ano.length === 2)
+                ano = "20" + ano;
             return parseInt(ano + mes.padStart(2, "0") + dia.padStart(2, "0"));
-        }
+        };
 
-        let fIni = converterDataNumero(valI);
-        let fFim = converterDataNumero(valF);
+        const fDataInicio = converterData(dataInicio);
+        const fDataFinal = converterData(dataFinal);
 
-        let linhas = container.find("table tbody tr");
+        const linhas = container.find("table tbody tr");
         let encontrou = false;
 
         linhas.each(function () {
-            let $linha = $(this);
-            let rIni = converterDataNumero($linha.find("td:eq(5)").text());
-            let rFim = converterDataNumero($linha.find("td:eq(6)").text());
+            const linhaAtual = $(this);
+            const linhaDataI = converterData(linhaAtual.find("td:eq(5)").text());
+            const linhaDataF = converterData(linhaAtual.find("td:eq(6)").text());
 
             let mostrar = true;
 
-            if (!fIni && !fFim) {
+            if (!fDataInicio && !fDataFinal) { //senao tem data mostra tudo
                 mostrar = true;
             } else {
-                if (fIni && rIni < fIni) {
+                //se tiver data compara, a data inicial da tabela for menor que a data escrita, então nao mostra, a msm logica para data final se a data final da tabela for maior que a data escrita
+                if (fDataInicio && linhaDataI < fDataInicio) {
                     mostrar = false;
                 }
-                if (fFim && rFim > fFim) {
+                if (fDataFinal && linhaDataF > fDataFinal) {
                     mostrar = false;
                 }
-                if (!rIni || !rFim) mostrar = false;
+                if (!linhaDataI || !linhaDataF) mostrar = false; //se tiver alguma data invalida não mostra
             }
 
-            $linha.toggle(mostrar);
+            $(this).toggle(mostrar); //se mostrar true ent mostra, senao false
             if (mostrar) encontrou = true;
         });
-
+        //se encontrou alguma linha mostra
         container.find("table").toggle(encontrou);
-        if (typeof Zebra === "function") Zebra();
-
-        let $primeira = linhas.filter(":visible").first();
-        if ($primeira.length) {
-            $primeira.find("input[type='radio']").prop("checked", true);
-            linhas.removeClass("linha-selecionada");
-            $primeira.addClass("linha-selecionada");
-        }
+        Zebra();
+        radioPrimeiraLinha();
     });
 
     //! ------------------- EVENTOS-------------------
@@ -457,7 +503,6 @@ $(document).ready(function () {
         let valor = $(this).val().trim().toLowerCase();
 
         let idSelect = (idAtual === "vpad-pesqusu") ? "#selectusu" : "#selectadm";
-        let nomeRadio = (idAtual === "vpad-pesqusu") ? "equipamentos" : "equipamentosADM";
 
         let tipo = $(idSelect).val();
         let linhas = $("table tbody tr");
@@ -494,15 +539,11 @@ $(document).ready(function () {
 
         $("table").toggle(tabelaCondicao);
         Zebra();
-
-        let primeiraVisivel = $("table tbody tr:visible").first();
-        primeiraVisivel.find(`input[name='${nomeRadio}']`).prop("checked", true);
-        $("tbody tr").removeClass("linha-selecionada");
-        primeiraVisivel.addClass("linha-selecionada");
+        radioPrimeiraLinha();
     });
 
     //!-------------------CLASSE PARA RADIOS SELECIONADOS-------------------
-    //resumo: adicionar um linstener q ve cada mudanca do radio e se for algum radio selecionado realiza a função e envia o radio q for, dps pega o radio de cada tabela e deixa como selecionado e adiciona a classe de selecionado
+    //resumo: adicionar um listener q ve cada mudanca do radio e se for algum radio selecionado realiza a função e envia o radio q for, dps pega o radio de cada tabela e deixa como selecionado e adiciona a classe de selecionado
     document.addEventListener("change", function (e) {
         if (e.target.type === "radio") selecionarLinha(e.target);
     });
@@ -527,11 +568,11 @@ $(document).ready(function () {
     //!-------------------ORDENAR PELO SELECT-------------------
     //resumo: entrega os parametros para função de ordena q acontece quando muda o select
     $("#selectadm").on("change", function () {
-        ordernarSelect("#selectadm", "#vpad-pesqadm", "equipamentosADM", "#adm");
+        ordernarSelect("#selectadm", "#vpad-pesqadm", "#adm");
     });
 
     $("#selectusu").on("change", function () {
-        ordernarSelect("#selectusu", "#vpad-pesqusu", "equipamentos", ".fundo");
+        ordernarSelect("#selectusu", "#vpad-pesqusu", ".fundo");
     });
 
     //!-------------------OUTROS-------------------
@@ -540,10 +581,12 @@ $(document).ready(function () {
         sessionStorage.removeItem("usuario");
         location.reload();
     });
-    //resumo: quando da click/focus no input de data aparece o showpicker q seria o clanedario
+
+    //resumo: quando da focus no input de data aparece o showpicker q seria o calendario(seletor integrado) - tirei com css porque achei feio
     $(document).on("focus", "input[type='date']", function () {
         this.showPicker();
     });
+
     //resumo: sair da tela de padrão manutenção, soda um reload
     $(".sair").click(function () {
         location.reload();
