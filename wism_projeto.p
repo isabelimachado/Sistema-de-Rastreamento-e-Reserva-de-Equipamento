@@ -3,15 +3,13 @@
 
 def var vpad-html1 as longchar.
 def var vpad-html2 as longchar.
-
 def var vtpl1      as class Template.
 def var vtpl2      as class Template.
-
-def var vdados-retorno as longchar.
 
 procedure output-header:
 end procedure.
 
+//responsável pelo fluxo principal entre js e progress: se tiver algum chamado da requisição ex: "p_alterar", roda ele e dps monta a tela
 if get-value("vpad_proc") <> "" then do:
     run value(get-value("vpad_proc")).
     quit.
@@ -25,6 +23,7 @@ run p_replace_html.
 run p_show_html.
 
 //?registro de usuario, obs: vadm-fput é pq nao dava pra colocar as condicoes dentro do fput
+//resumo: pega o primeiro usuario que tiver o mesmo email que foi gitiado no input, se tiver mostra que não tem como cadastrar, pega o último código de usuário que tiver, e faz o create que vai adicionar mais um do ultimo e adicionar os get value nos campos da tabela usuario, no 
 //! ------------------- REGISTRO USUARIO -------------------
 procedure p_gravar:
     def var vjson     as longchar.
@@ -56,38 +55,8 @@ procedure p_gravar:
     quit.
 end procedure.
 
-procedure p_alterar_reserva:
-    def var vid as int.
-    def var vdata_inicio as date.
-    def var vdata_final as date.
-
-    assign vid = int(get-value("vcodigo_reserva")) no-error.
-
-    find first reservaEquipa exclusive-lock where reservaEquipa.vcodigo_reserva = vid no-error.
-
-    if not avail reservaEquipa then do:
-        fput('~{"msg":false~}').
-        quit.
-    end.
-
-    assign
-        vdata_inicio = date(int(get-value("di_mes")), int(get-value("di_dia")), int(get-value("di_ano")))
-        vdata_final = date(int(get-value("df_mes")), int(get-value("df_dia")), int(get-value("df_ano"))).
-
-    if vdata_final <= vdata_inicio or  vdata_inicio = reservaEquipa.data_inicio and vdata_final = reservaEquipa.data_final then do:
-        fput('~{"msg":false~}').
-        quit.
-    end.
-
-    assign
-        reservaEquipa.data_inicio = vdata_inicio
-        reservaEquipa.data_final = vdata_final.
-
-    fput('~{"msg":true~}').
-    quit.
-end procedure.
-
-//! ------------------- LOGIN USUARIO -------------------
+//!------------------- LOGIN USUARIO -------------------
+//resumo: pega o usuario que tiver o msm email e senha digitado no js, se não tiver vai manda como senha invalida, se o usuario for adm retorna true senão false
 procedure p_login:
     def var vadm-fput as char.
 
@@ -104,16 +73,17 @@ procedure p_login:
     quit.
 end procedure.
 
+//resumo: carregar template do registro/login e do projeto
 procedure p_load_html:
     copy-lob file "/agroweb/templates/wism_projeto.tpl" to vpad-html1.
     vtpl1 = new Template(vpad-html1).
-
     copy-lob file "/agroweb/templates/wism_registro.tpl" to vpad-html2.
     vtpl2 = new Template(vpad-html2).
 end procedure.
 
-//?resumo: equipamento na tela usuário,na tela de adm equipamento com -- se nn tiver reserva, agora se tiver desse msm equipamento, procura o usuario e o setor dele, dps so atribui tudo para as var do block 
-//! ------------------- REPLACE HTML -------------------
+
+//!------------------- REPLACE HTML -------------------
+//resumo: primeiro vcache é a variavel que faz força a recarga de recurso, percorre os tipos de equipamento e faz um block, que vai fica responsavel de aparecer lá na tela de incluir equipamento, tambem o select de equipamento disponivel para criar reserva
 procedure p_replace_html:
     def var vcache        as char.
     def var vcodigo_eq    as int.
@@ -144,25 +114,23 @@ procedure p_replace_html:
         vtpl1:troca("[vnome]", equipamento.vnome).
         vtpl1:block("BLOCK_SELECT_EQUIPA").
     end.
-
+    //percorre equipamento, reservas do equipamento que tiverem como status da reserva como "reservado" e a data de inicio for menor e igual a de hoje e a dinal maior e igual a de hoje, pega o primeiro usuario que tiver relacionado com a reserva, e atriui 
     for each equipamento no-lock:
-
-        assign
-            vtipo_adm     = "--"
-            vusu_adm      = "--"
-            vdata_ini_adm = "--"
-            vdata_fim_adm = "--"
-            vmotivo_adm   = "--".
-
+        //release: limpa o buffer para não aparecer
         release usuarioEquipa.
         release reservaEquipa.
         release tipoEquipa.
 
-        find last reservaEquipa no-lock 
-            where reservaEquipa.vcodigo_equipa = equipamento.codigo 
-            and reservaEquipa.vstatus = "Reservado"
-            and reservaEquipa.data_final >= today 
-            no-error.
+        for each reservaEquipa no-lock where reservaEquipa.vcodigo_equipa = equipamento.codigo and reservaEquipa.vstatus = "Reservado" and reservaEquipa.data_inicio <= today and reservaEquipa.data_final >= today:
+
+            find first usuarioEquipa no-lock where usuarioEquipa.vcodigo = reservaEquipa.vcodigo_usu no-error.
+    
+            assign
+                vdata_ini_adm = string(reservaEquipa.data_inicio)
+                vdata_fim_adm = string(reservaEquipa.data_final)
+                vmotivo_adm   = reservaEquipa.motivo.
+            leave.
+        end.
 
         if avail reservaEquipa then
             find first usuarioEquipa no-lock 
@@ -194,7 +162,67 @@ procedure p_replace_html:
     
 end procedure.
 
+//!------------------- ALTERAR DATA RESERVA -------------------
+procedure p_alterar_reserva:
+    def var vid as int.
+    def var vdata_inicio as date.
+    def var vdata_final as date.
+    def var vcodigo_eq as int.
+    def var vReservaConflito as log init false.
+
+    assign vid = int(get-value("vcodigo_reserva")) no-error.
+
+    find first reservaEquipa exclusive-lock where reservaEquipa.vcodigo_reserva = vid no-error.
+
+    if not avail reservaEquipa then do:
+        fput('~{"msg":"Reserva não encontrada"}').
+        quit.
+    end.
+
+    assign
+        vdata_inicio = date(int(get-value("di_mes")), int(get-value("di_dia")), int(get-value("di_ano")))
+        vdata_final = date(int(get-value("df_mes")), int(get-value("df_dia")), int(get-value("df_ano")))
+        vcodigo_eq = reservaEquipa.vcodigo_equipa.
+
+    if vdata_inicio < today then do:
+        fput('~{"msg":"data inicial menor que hoje"}').
+        quit.
+    end.
+
+    if vdata_final <= vdata_inicio then do:
+        fput('~{"msg":"data final menor que a incial"}').
+        quit.
+    end.
+
+    if vdata_inicio = reservaEquipa.data_inicio and vdata_final = reservaEquipa.data_final then do:
+        fput('~{"msg":"datas iguais"}').
+        quit.
+    end.
+
+    for each reservaEquipa where reservaEquipa.vcodigo_equipa = vcodigo_eq and reservaEquipa.vcodigo_reserva <> vid and reservaEquipa.vstatus = "Reservado" no-lock:
+        
+    if vdata_inicio <= reservaEquipa.data_final and vdata_final >= reservaEquipa.data_inicio then do:
+            vReservaConflito = true.
+            leave.
+        end.
+    end.
+
+    if vReservaConflito then do:
+        fput('~{"msg":"conflito datas"}').
+        quit.
+    end.
+
+    find first reservaEquipa exclusive-lock where reservaEquipa.vcodigo_reserva = vid no-error.
+    assign
+        reservaEquipa.data_inicio = vdata_inicio
+        reservaEquipa.data_final = vdata_final.
+
+    fput('~{"msg":true~}').
+    quit.
+end procedure.
+
 //! ------------------- INCLUIR ELEMENTO -------------------
+//resumo: pega ultimo código que tiver e substitui na variavel de último, faz o create e adiciona dentro dos campos oque foi digitado
 procedure p_incluir_equipamento:
     def var vultimo as int init 0.
 
@@ -214,20 +242,24 @@ procedure p_incluir_equipamento:
 end procedure.
 
 //!------------------- ALTERAR STATUS RESERVA VENCIDA -------------------
+//resumo: pega todas as reservas que tem status como reservado e a data final for hoje, pega o equipamento daquela reserva e atribui tanto o status do eqipamento e da reserva como disponível
 procedure p_atualizar_reservas:
-    for each reservaEquipa exclusive-lock where reservaEquipa.vstatus = "Reservado" and reservaEquipa.data_final = today:
+
+    for each reservaEquipa exclusive-lock 
+        where reservaEquipa.vstatus = "Reservado" 
+        and reservaEquipa.data_final = today:
+
         find first equipamento exclusive-lock where equipamento.codigo = reservaEquipa.vcodigo_equipa no-error.
-        
-        if avail equipamento then
+    
+        if avail equipamento then do:
             equipamento.vstatus = "Disponível".
             reservaEquipa.vstatus = "Disponível".
         end.
+    end. 
 end procedure.
 
-
-//! NÃO TA DANDO CERTO - deu :)
-//?mostrar as reservas das mais recentes, e para baixo as mais antigas algo assim
 //! ------------------- MINHAS RESERVAS -------------------
+//resumo: pega código global do usuario, percorre as reservas que tenham usuario vinculado com a reserva e que a usuario tenha status reservado, pegam o primeiro equipamento dessa reserva, e faz um vlinha que vai ser o html que vai ser levado no js, cria a lista com o equipamento as datas e os botoes, se o html fica vazio vai  ser porque não tem reserva 
 procedure p_minhas_reservas:
     def var vcodigous   as int.
     def var vhtml  as longchar.
@@ -237,8 +269,7 @@ procedure p_minhas_reservas:
 
     for each reservaEquipa no-lock 
     where reservaEquipa.vcodigo_usu = vcodigous 
-    and reservaEquipa.vstatus = "Reservado"
-    by reservaEquipa.data_inicio:
+    and reservaEquipa.vstatus = "Reservado":
         find first equipamento no-lock where equipamento.codigo = reservaEquipa.vcodigo_equipa no-error.
 
     assign vlinha =
@@ -262,21 +293,21 @@ procedure p_minhas_reservas:
     quit.
 end procedure.
 
+//! ------------------- CANCELAR RESERVA -------------------
+//resumo: pega o id da reserva, encontra reserva que código = id, se nao tiver manda uma mensagem de false que verifico no js para dizer que deu erro, encontro o equipamento que tiver esse código de reserva e adiciono no status da reserva como cancelado e do equipamento como disponível e envio a mensagem true que deu certo
 procedure p_cancelar_reserva:
     def var vid as int.
 
     assign vid = int(get-value("vcodigo_reserva")) no-error.
 
-    find first reservaEquipa exclusive-lock 
-        where reservaEquipa.vcodigo_reserva = vid no-error.
+    find first reservaEquipa exclusive-lock where reservaEquipa.vcodigo_reserva = vid no-error.
 
     if not avail reservaEquipa then do:
         fput('~{"msg":false~}').
         quit.
     end.
 
-    find first equipamento exclusive-lock 
-        where equipamento.codigo = reservaEquipa.vcodigo_equipa no-error.
+    find first equipamento exclusive-lock where equipamento.codigo = reservaEquipa.vcodigo_equipa no-error.
 
     assign
         reservaEquipa.vstatus = "Cancelado".
@@ -291,14 +322,37 @@ end procedure.
 procedure p_criar_reserva:
     def var vultimo      as int init 0.
     def var vcodigo_eq   as int.
+    def var vdata_inicio as date.
+    def var vdata_final  as date.
+    def var vconflito as log init false.
 
     assign vcodigo_eq = int(get-value("vcodigo_equipa")) no-error.
+    assign  vdata_inicio = date(int(get-value("di_mes")), int(get-value("di_dia")), int(get-value("di_ano"))).
+    assign  vdata_final  = date(int(get-value("df_mes")), int(get-value("df_dia")), int(get-value("df_ano"))).
 
     find first equipamento exclusive-lock where equipamento.codigo = vcodigo_eq no-error.
 
     if not avail equipamento then do:
-         fput('~{"msg":false~}').
+        fput('~{"msg":false~}').
         quit.
+    end.
+
+    if vdata_inicio < today or vdata_final <= vdata_inicio then do:
+        fput('~{"msg":false~}').
+        quit.
+    end.
+
+    for each reservaEquipa no-lock where reservaEquipa.vcodigo_equipa = vcodigo_eq and reservaEquipa.vstatus = "Reservado":
+    
+        if vdata_inicio <= reservaEquipa.data_final and vdata_final  >= reservaEquipa.data_inicio then do:
+            vconflito = true.
+            leave.
+        end.
+    end.
+    
+    if vconflito then do:
+        fput('~{"msg":"mesmo periodo reserva"}').
+        return.
     end.
 
     for last reservaEquipa no-lock by reservaEquipa.vcodigo_reserva:
@@ -308,14 +362,18 @@ procedure p_criar_reserva:
     create reservaEquipa.
     assign
         reservaEquipa.vcodigo_reserva = vultimo + 1
-        reservaEquipa.vcodigo_equipa = vcodigo_eq
-        reservaEquipa.vcodigo_usu = int(get-value("vcodigo_usu")) 
-        reservaEquipa.data_inicio = date(int(get-value("di_mes")),int(get-value("di_dia")),int(get-value("di_ano")))
+        reservaEquipa.vcodigo_equipa  = vcodigo_eq
+        reservaEquipa.vcodigo_usu     = int(get-value("vcodigo_usu"))
+        reservaEquipa.data_inicio     = vdata_inicio
+        reservaEquipa.data_final      = vdata_final
+        reservaEquipa.motivo          = url-decode(get-value("motivo"))
+        reservaEquipa.vstatus         = "Reservado".
 
-        reservaEquipa.data_final = date(int(get-value("df_mes")),int(get-value("df_dia")),int(get-value("df_ano")))
-        reservaEquipa.motivo = url-decode(get-value("motivo"))
-        reservaEquipa.vstatus = "Reservado"
+    if vdata_inicio <= today then
         equipamento.vstatus = "Reservado".
+    else
+        equipamento.vstatus = "Disponível".
+
     fput('~{"msg":true~}').
     quit.
 end procedure.
@@ -323,26 +381,48 @@ end procedure.
 //! ------------------- ALTERAR STATUS -------------------
 procedure p_alterar_status:
     def var vcodigo_eq as int.
-
+    def var vnovo_status as char.
+    
+    assign vnovo_status = url-decode(get-value("vstatus")).
     assign vcodigo_eq = int(get-value("vcodigo_equipa")) no-error.
 
-    find first equipamento exclusive-lock where equipamento.codigo = vcodigo_eq no-error.
+    find first equipamento exclusive-lock 
+    where equipamento.codigo = vcodigo_eq no-error.
 
     if not avail equipamento then do:
         fput('~{"msg":false~}').
         quit.
     end.
 
-    assign equipamento.vstatus = url-decode(get-value("vstatus")).
-
-    find last reservaEquipa exclusive-lock where reservaEquipa.vcodigo_equipa = vcodigo_eq and reservaEquipa.vstatus = "Reservado" no-error.
+    find first reservaEquipa no-lock 
+        where reservaEquipa.vcodigo_equipa = vcodigo_eq
+        and reservaEquipa.vstatus = "Reservado"
+        and reservaEquipa.data_inicio > today no-error.
 
     if avail reservaEquipa then do:
-        assign reservaEquipa.vstatus = "Disponível". 
+        fput('~{"msg":"futuras reservas"~}').
+        quit.
     end.
 
-    fput('~{"msg":true~}').
-    quit.
+    if vnovo_status = "Inativo" then do:
+        for each reservaEquipa exclusive-lock 
+            where reservaEquipa.vcodigo_equipa = vcodigo_eq
+            and reservaEquipa.vstatus = "Reservado"
+            and reservaEquipa.data_inicio >= today:
+
+            reservaEquipa.vstatus = "Cancelado".
+        end.
+    end.
+
+assign equipamento.vstatus = vnovo_status.
+
+if vnovo_status = "Disponível" then do:
+    for each reservaEquipa exclusive-lock where reservaEquipa.vcodigo_equipa = vcodigo_eq and reservaEquipa.vstatus = "Reservado" and reservaEquipa.data_final < today:
+        reservaEquipa.vstatus = "Disponível".
+    end.
+end.
+
+fput('~{"msg":true~}').
 end procedure.
 
 //! ------------------- FUNÇÕES NAVEGADOR -------------------
@@ -362,5 +442,3 @@ function fput returns char (vjson as longchar):
     end.
     else {&out} string(vjson).
 end function.
-
-
