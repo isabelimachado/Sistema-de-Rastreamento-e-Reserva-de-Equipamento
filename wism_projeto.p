@@ -121,6 +121,7 @@ procedure p_replace_html:
         release reservaEquipa.
         release tipoEquipa.
 
+        //pega as reserva que forem de hoje, reservadas , encontra usuario, leave apos achar 
         for each reservaEquipa no-lock where reservaEquipa.vcodigo_equipa = equipamento.codigo and reservaEquipa.vstatus = "Reservado" and reservaEquipa.data_inicio <= today and reservaEquipa.data_final >= today:
 
             find first usuarioEquipa no-lock where usuarioEquipa.vcodigo = reservaEquipa.vcodigo_usu no-error.
@@ -131,15 +132,17 @@ procedure p_replace_html:
                 vmotivo_adm   = reservaEquipa.motivo.
             leave.
         end.
-
+        
+        //validacao para achar usuario da reserva
         if avail reservaEquipa then
-            find first usuarioEquipa no-lock 
-                where usuarioEquipa.vcodigo = reservaEquipa.vcodigo_usu no-error.
+        find first usuarioEquipa no-lock where usuarioEquipa.vcodigo = reservaEquipa.vcodigo_usu no-error.
 
+        //depois encontra o tipo de equipamento igual ao do equipamentp
         find first tipoEquipa no-lock 
             where tipoEquipa.vcodigo = equipamento.vtipo 
             no-error.
-
+        
+        //aqui verificações caso não tenha ou seja ? ent --
         assign
             vtipo_adm     = if avail tipoEquipa then tipoEquipa.vnometipo else "--"
             vusu_adm      = if avail usuarioEquipa then usuarioEquipa.vnome else "--"
@@ -157,12 +160,12 @@ procedure p_replace_html:
         vtpl1:troca("[vstatus]", equipamento.vstatus).
         vtpl1:block("BLOCK_EQUIPA").
         vtpl1:block("BLOCK_ADM").
-
     end.
     
 end procedure.
 
 //!------------------- ALTERAR DATA RESERVA -------------------
+//resumo: pega id da reserva, procura se tem reserva com aquela entrega, se não tiver, coloc no msg, depois pega cada dia,mes,ano e construi um data, depois verificacoes, se data inicio for menor q hoje, data final menor que a inicial, datas iguais já que nao faz sentido tb, depois percorre todas as reservas daquele equipamento, verifica se a data inicio comeca antes do fim e se a data final termina depois do inicio, marca conflito, se tiver conflito envia msg, depois atualiza datas e sai denovo para nao ocorre erro
 procedure p_alterar_reserva:
     def var vid as int.
     def var vdata_inicio as date.
@@ -319,12 +322,14 @@ procedure p_cancelar_reserva:
 end procedure.
 
 //! ------------------- CRIAR RESERVA -------------------
+//resumo:pega código do equipamento selecionado no select, converte as datas para o formato certo date, verifica se tem equipamento, verifica datas no passado ou invalida, depois verifica conflito de reservas igual o alterar, pega todas as reservas do equipamento, e se os periodos se sobrepoe, se sim retorna esse conflito, senao faz os creates, se a data inicio for menor ou igual hoje fica como reservado,senao disponivel
+//?ponto importante: na tabela so mostra como reservado reservas criadas a partir de hoje, então se fizer uma reserva futura continua como disponível
 procedure p_criar_reserva:
     def var vultimo      as int init 0.
     def var vcodigo_eq   as int.
     def var vdata_inicio as date.
     def var vdata_final  as date.
-    def var vconflito as log init false.
+    def var vConflito as log init false.
 
     assign vcodigo_eq = int(get-value("vcodigo_equipa")) no-error.
     assign  vdata_inicio = date(int(get-value("di_mes")), int(get-value("di_dia")), int(get-value("di_ano"))).
@@ -345,12 +350,12 @@ procedure p_criar_reserva:
     for each reservaEquipa no-lock where reservaEquipa.vcodigo_equipa = vcodigo_eq and reservaEquipa.vstatus = "Reservado":
     
         if vdata_inicio <= reservaEquipa.data_final and vdata_final  >= reservaEquipa.data_inicio then do:
-            vconflito = true.
+            vConflito = true.
             leave.
         end.
     end.
     
-    if vconflito then do:
+    if vConflito then do:
         fput('~{"msg":"mesmo periodo reserva"}').
         return.
     end.
@@ -379,6 +384,7 @@ procedure p_criar_reserva:
 end procedure.
 
 //! ------------------- ALTERAR STATUS -------------------
+//resumo: pega o status novo e o código do equipamento, verifica se tem equipamento para aquele codigo, senao retorna falso, se achar reserva pro equipamento, e se tiver já reservas futuras para o equipamento envia isso e sai já que não acho interessante cancelar reservas mesmo se for para manutenção/inativo so pode alterar isso se ficar disponivel, se as reservas vencer fica disponivel pode alterar 
 procedure p_alterar_status:
     def var vcodigo_eq as int.
     def var vnovo_status as char.
@@ -395,34 +401,29 @@ procedure p_alterar_status:
     end.
 
     find first reservaEquipa no-lock 
-        where reservaEquipa.vcodigo_equipa = vcodigo_eq
-        and reservaEquipa.vstatus = "Reservado"
-        and reservaEquipa.data_inicio > today no-error.
+        where reservaEquipa.vcodigo_equipa = vcodigo_eq 
+        and reservaEquipa.vstatus = "Reservado" 
+        and reservaEquipa.data_inicio > today 
+    no-error.
 
     if avail reservaEquipa then do:
         fput('~{"msg":"futuras reservas"~}').
         quit.
     end.
 
-    if vnovo_status = "Inativo" then do:
-        for each reservaEquipa exclusive-lock 
-            where reservaEquipa.vcodigo_equipa = vcodigo_eq
-            and reservaEquipa.vstatus = "Reservado"
-            and reservaEquipa.data_inicio >= today:
+    assign equipamento.vstatus = vnovo_status.
 
-            reservaEquipa.vstatus = "Cancelado".
+    if vnovo_status = "Disponível" then do:
+        for each reservaEquipa exclusive-lock 
+            where reservaEquipa.vcodigo_equipa = vcodigo_eq 
+            and reservaEquipa.vstatus = "Reservado" 
+            and reservaEquipa.data_final < today:
+
+            reservaEquipa.vstatus = "Disponível".
         end.
     end.
 
-assign equipamento.vstatus = vnovo_status.
-
-if vnovo_status = "Disponível" then do:
-    for each reservaEquipa exclusive-lock where reservaEquipa.vcodigo_equipa = vcodigo_eq and reservaEquipa.vstatus = "Reservado" and reservaEquipa.data_final < today:
-        reservaEquipa.vstatus = "Disponível".
-    end.
-end.
-
-fput('~{"msg":true~}').
+    fput('~{"msg":true~}').
 end procedure.
 
 //! ------------------- FUNÇÕES NAVEGADOR -------------------
