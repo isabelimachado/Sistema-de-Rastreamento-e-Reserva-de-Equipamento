@@ -9,7 +9,8 @@ def var vtpl2      as class Template.
 procedure output-header:
 end procedure.
 
-/* responsável pelo fluxo principal entre js e progress: se tiver algum chamado da requisição ex: "p_alterar", roda ele e dps monta a tela*/if get-value("vpad_proc") <> "" 
+/* responsável pelo fluxo principal entre js e progress: se tiver algum chamado da requisição ex: "p_alterar", roda ele e dps monta a tela*/
+if get-value("vpad_proc") <> "" 
 then do:
     run value(get-value("vpad_proc")).
     quit.
