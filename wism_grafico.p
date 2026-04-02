@@ -2,10 +2,8 @@
 {wpadfunc.i}
 {wpadgraf.i}
 
-
 procedure output-header:
 end procedure.
-
 
 procedure p_load:
    def var vgantt as class GPadGantt.
@@ -47,15 +45,16 @@ procedure p_load:
 
         vgantt:setHint(
             "Equipamento: " + (if avail equipamento then equipamento.vnome else "--") + "<br>" +
-            "Usu·rio: "     + (if avail usuarioEquipa then usuarioEquipa.vnome else "--") + "<br>" +
+            "Usu√°rio: "     + (if avail usuarioEquipa then usuarioEquipa.vnome else "--") + "<br>" +
             "Setor: "       + (if avail usuarioEquipa then usuarioEquipa.setor else "--") + "<br>" +
             "Motivo: "      + reservaEquipa.motivo + "<br>" +
-            "InÌcio: "      + string(reservaEquipa.data_inicio, "99/99/9999") + "<br>" +
+            "In√≠cio: "      + string(reservaEquipa.data_inicio, "99/99/9999") + "<br>" +
             "Fim: "         + string(reservaEquipa.data_final,  "99/99/9999")
         ).
     end.
 
-if i > 0 then do:
+if i > 0 
+then do:
     vpad-grafico:add(vgantt).
     vpad-grafico:show().
 end.
