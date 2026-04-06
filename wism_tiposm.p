@@ -50,7 +50,6 @@ end procedure.
 procedure p_mostra:
     if not can-find(first tipoEquipa where tipoEquipa.vnometipo <> "" and tipoEquipa.vnometipo <> ?) then do:
         {wpaderro.i "erro" "'Nenhum tipo encontrado'"}
-        return.
     end.
 
     {&out} 
@@ -67,36 +66,25 @@ procedure p_grava:
     then do:
         {wpaderro.i "erro" "'Nome do Tipo deve ser informado'"}
     end.
-
-    if get-value("vpad-modo") = "MAN" then 
-        find first tipoEquipa where tipoEquipa.vnometipo = get-value("vtipo-nome") exclusive-lock no-error.
-    else 
-        find first tipoEquipa where tipoEquipa.vnometipo = "" exclusive-lock no-error.
     
-    if avail tipoEquipa 
-    then do:
-        assign tipoEquipa.vnometipo = v_nome.
-    end.
+    assign tipoEquipa.vnometipo = v_nome.
 
     flocation("","wism_tiposm","").
 end procedure.
 
 procedure p_criareg:
     def var vcodigo as int.
+
+    find last tipoEquipa no-lock no-error.
+    assign vcodigo = 
+    if avail tipoEquipa 
+    then tipoEquipa.vcodigo + 1 
+    else 1.
     
-    if get-value("vmodo-param") <> "MAN" 
-    then do:
-        find last tipoEquipa no-lock no-error.
-        assign vcodigo = 
-        if avail tipoEquipa 
-        then tipoEquipa.vcodigo + 1 
-        else 1.
-        
-        create tipoEquipa.
-        assign tipoEquipa.vcodigo   = vcodigo
-               tipoEquipa.vnometipo = ""
-        .
-    end.
+    create tipoEquipa.
+    assign tipoEquipa.vcodigo   = vcodigo
+            tipoEquipa.vnometipo = ""
+    .
 end procedure.
 
 procedure p_excluir:
@@ -104,13 +92,11 @@ procedure p_excluir:
 
     assign vnome_del = get-value("vtipo-nome").
 
-    if vnome_del <> "" 
-    then do:
-        find first tipoEquipa where 
+    find first tipoEquipa where 
         tipoEquipa.vnometipo = vnome_del exclusive-lock no-error.
-        if avail tipoEquipa 
-        then delete tipoEquipa.
-    end.
+        
+    if avail tipoEquipa 
+       then delete tipoEquipa.
     
     flocation("","wism_tiposm","").
 end procedure.
