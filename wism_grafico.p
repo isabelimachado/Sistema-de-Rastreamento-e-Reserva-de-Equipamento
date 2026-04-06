@@ -7,11 +7,13 @@ end procedure.
 
 procedure p_load:
    def var vgantt as class GPadGantt.
+   def var i      as int.
 
+    assign i = 0.
     assign vgantt = new GPadGantt("days"). 
     vgantt:setScale("*").
 
-    def var vcodigo as int.
+    def var vcodigo as int no-undo.
 
     assign vcodigo = int(get-value("vcodigo_equipa")) no-error.
 
@@ -24,6 +26,8 @@ procedure p_load:
 
         find first usuarioEquipa no-lock
             where usuarioEquipa.vcodigo = reservaEquipa.vcodigo_usu no-error.
+
+        assign i = i + 1.
 
         vgantt:setBkgColor("rgb(130 181 220)").
         vgantt:setFntColor("white").
