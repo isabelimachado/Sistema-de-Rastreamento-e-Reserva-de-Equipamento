@@ -7,15 +7,13 @@ end procedure.
 
 procedure p_load:
    def var vgantt as class GPadGantt.
-   def var i      as int.
 
-    assign i = 0.
     assign vgantt = new GPadGantt("days"). 
     vgantt:setScale("*").
 
-    def var vcodigo as int no-undo.
+    def var vcodigo as int.
 
-    assign vcodigo = integer(get-value("vcodigo_equipa")) no-error.
+    assign vcodigo = int(get-value("vcodigo_equipa")) no-error.
 
     for each reservaEquipa no-lock
         where reservaEquipa.vstatus <> "Cancelado"
@@ -27,14 +25,12 @@ procedure p_load:
         find first usuarioEquipa no-lock
             where usuarioEquipa.vcodigo = reservaEquipa.vcodigo_usu no-error.
 
-        assign i = i + 1.
-
         vgantt:setBkgColor("rgb(130 181 220)").
         vgantt:setFntColor("white").
 
         vgantt:setData(
-            i,
-            if avail equipamento then equipamento.vnome else "Equipamento " + string(reservaEquipa.vcodigo_equipa),
+            reservaEquipa.vcodigo_equipa,
+            equipamento.vnome,
             usuarioEquipa.vnome,
             reservaEquipa.data_inicio,
             reservaEquipa.data_final
@@ -53,16 +49,13 @@ procedure p_load:
         ).
     end.
 
-if i > 0 
-then do:
+if i > 0 then do:
     vpad-grafico:add(vgantt).
     vpad-grafico:show().
 end.
+
 else do:
     {&out} "<div style='padding: 24px; text-align: center; color: #999; font-style: italic; font-size: 24px;position: relative;top: 35%;'>Nenhuma reserva encontrada para este equipamento!</div>".
 end.
 
 end procedure.
-
-
-
